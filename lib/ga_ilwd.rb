@@ -128,6 +128,13 @@ class GA_ILWD
           prev_form: functional[:prev_form]).save!
       end
     end
+    if FunctionalRule.where(
+      content_id: @exact_content_id,
+      functional_id: functional_id).first.nil?
+      FunctionalRule.new(
+        content_id: @exact_content_id,
+        functional_id: functional_id).save!
+    end
   end
 
   def single_patterns(content)
