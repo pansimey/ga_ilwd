@@ -1,6 +1,7 @@
 = ga_ilwd
 
-Description goes here.
+GA-ILWD: Written Dialog Processing Method
+Using Inductive Learning with Genetic Algorithm
 
 == Contributing to ga_ilwd
  
