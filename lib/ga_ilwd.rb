@@ -34,23 +34,9 @@ class GA_ILWD
         concat
       end
     end
+    broad_match # 65％以上の部分一致検索
+    exact_match # 完全一致検索
     # 順序を含めて100％合致の内容語列がなければ新規内容語列
-    content_ids = nil
-    @contents.each_with_index do |content, index|
-      content_patterns =
-        ContentPattern.where(
-          :order => index + 1,
-          :infinite => content[:infinite],
-          :pos => content[:pos],
-          :conj_type => content[:conj_type]).all
-      new_content_ids = content_patterns.map{|pattern| pattern.pattern_id}
-      if content_ids.nil?
-        content_ids = new_content_ids
-      else
-        content_ids = content_ids & new_content_ids
-      end
-      break if content_ids.size == 0
-    end
     # 表層文生成ルールに保存
     # if @last_response_id
     #   応答文生成S->Uルールに保存
@@ -62,14 +48,95 @@ class GA_ILWD
   end
 
   private
-  def single_pattern_exists?(content)
-    content_patterns =
-      ContentPattern.where(
-        :order => 1,
-        :count => 1).all.where(
-          :word => content[:infinite],
-          :pos => content[:pos]).all.where(
-            :type => content[:conj_type])
+  def broad_match
+  end
+
+  def exact_match
+    retrieve_exact_content
+    retrieve_functional_rule
+  end
+
+  def retrieve_exact_content
+    content_ids = nil
+    @contents.each_with_index do |content, index|
+      content_patterns =
+        ContentPattern.where(
+          order: index + 1,
+          count: @contents.size,
+          word: content[:infinite],
+          pos: content[:pos],
+          conj_type: content[:conj_type]).all
+      new_content_ids = content_patterns.map{|pattern| pattern.pattern_id}
+      if content_ids.nil?
+        content_ids = new_content_ids
+      else
+        content_ids &= new_content_ids
+      end
+      break if content_ids.size == 0
+    end
+    if content_ids.size > 0
+      @exact_content_id = content_ids.first
+    else
+      if ContentPattern.count > 0
+        @exact_content_id = ContentPattern.max(:pattern_id) + 1
+      else
+        @exact_content_id = 1
+      end
+      @contents.each_with_index do |content, index|
+        ContentPattern.new(
+          pattern_id: @exact_content_id,
+          order: index + 1,
+          count: @contents.size,
+          word: content[:infinite],
+          pos: content[:pos],
+          conj_type: content[:conj_type]).save!
+      end
+    end
+  end
+
+  def retrieve_functional_rule
+    functional_ids = nil
+    @functionals.each_with_index do |functional, index|
+      functional_patterns =
+        FunctionalPattern.where(
+          order: index + 1,
+          count: @contents.size,
+          word: functional[:surface],
+          prev_form: functional[:prev_form]).all
+      new_functional_ids = functional_patterns.map{|pattern| pattern.pattern_id}
+      if content_ids.nil?
+        functional_ids = new_functional_ids
+      else
+        functional_ids &= new_functional_ids
+      end
+      break if functional_ids.size == 0
+    end
+    if content_ids.size > 0
+      functional_id = functional_ids.first
+    else
+      if FunctionalPattern.count > 0
+        functional_id = FunctionalPattern.max(:pattern_id) + 1
+      else
+        functional_id = 1
+      end
+      @functionals.each_with_index do |functional, index|
+        FunctionalPattern.new(
+          pattern_id: functional_id,
+          order: index + 1,
+          count: @functionals.size,
+          word: functional[:surface],
+          prev_form: functional[:prev_form]).save!
+      end
+    end
+  end
+
+  def single_patterns(content)
+    ContentPattern.where(
+      order: 1,
+      count: 1,
+      word: content[:infinite],
+      pos: content[:pos],
+      type: content[:conj_type]).all
   end
 
   def initialize_state!
