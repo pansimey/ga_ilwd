@@ -133,7 +133,8 @@ class GA_ILWD
       functional_id: functional_id).first.nil?
       FunctionalRule.new(
         content_id: @exact_content_id,
-        functional_id: functional_id).save!
+        functional_id: functional_id,
+        frequency: 1).save!
     end
   end
 
