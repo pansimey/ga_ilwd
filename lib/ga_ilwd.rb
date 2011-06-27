@@ -78,7 +78,7 @@ class GA_ILWD
       @exact_content_id = content_ids.first
     else
       if ContentPattern.count > 0
-        @exact_content_id = ContentPattern.max(:pattern_id) + 1
+        @exact_content_id = ContentPattern.maximum(:pattern_id) + 1
       else
         @exact_content_id = 1
       end
@@ -115,7 +115,7 @@ class GA_ILWD
       functional_id = functional_ids.first
     else
       if FunctionalPattern.count > 0
-        functional_id = FunctionalPattern.max(:pattern_id) + 1
+        functional_id = FunctionalPattern.maximum(:pattern_id) + 1
       else
         functional_id = 1
       end
