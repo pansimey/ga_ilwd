@@ -34,10 +34,9 @@ class GA_ILWD
         concat
       end
     end
-    broad_match # 65％以上の部分一致検索
-    exact_match # 完全一致検索
+    broad_match
+    exact_match
     # 順序を含めて100％合致の内容語列がなければ新規内容語列
-    # 表層文生成ルールに保存
     # if @last_response_id
     #   応答文生成S->Uルールに保存
     # end
@@ -49,6 +48,35 @@ class GA_ILWD
 
   private
   def broad_match
+    content_patterns = []
+    @contents.each do |content|
+      content_patterns <<
+        ContentPattern.where(
+          count: range_of_count,
+          word: content[:word],
+          pos: content[:pos],
+          conj_type: content[:conj_type]).all
+    end
+    id_to_count = content_patterns.inject({}) do |hash, pattern|
+      unless hash.key?(pattern.pattern_id)
+        hash[pattern.pattern_id] = pattern.count
+      end
+      hash
+    end
+    content_pattern_ids << content_patterns.map{|pattern| pattern.pattern_id}
+    id_to_matched = content_pattern_ids.uniq.inject({}) do |hash, id|
+      hash[id] = content_pattern_ids.grep(id).size
+      hash
+    end
+    @broad_content_ids = id_to_count.keys.select do |id|
+      count = @contents.size > id_to_count[id] ?
+        @contents.size : id_to_count[id]
+      id_to_matched[id] / count.to_f > 0.65
+    end
+  end
+
+  def range_of_count
+    @contents.size * 65 / 100 + 1 .. @contents.size * 100 / 65
   end
 
   def exact_match
@@ -257,14 +285,20 @@ class GA_ILWD
 
   def finalize!
     if functional_state?
-      @functionals << { word: @surface, prev_form: @prev_form }
+      @functionals << {
+        word: @surface,
+        prev_form: @prev_form
+      }
     else
       @contents << {
         word: @infinite,
         pos: @last_pos,
         conj_type: @conj_type
       }
-      @functionals << { word: '', prev_form: nil }
+      @functionals << {
+        word: '',
+        prev_form: nil
+      }
     end
   end
 
