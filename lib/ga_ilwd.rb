@@ -30,7 +30,7 @@ class GA_ILWD
       end
       node.next
     end
-    finalize!
+    finalize_state!
     variable_match
     broad_match
     exact_match
@@ -250,7 +250,7 @@ class GA_ILWD
     @current_pos = node.pos
   end
 
-  def finalize!
+  def finalize_state!
     if functional_state?
       @functionals << {
         word: @surface,
