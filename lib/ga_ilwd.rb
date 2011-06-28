@@ -21,16 +21,16 @@ class GA_ILWD
 
   def respond(string)
     initialize_state!
-    @node = Node.parse_from(string)
-    while @node.next
-      if @node.end_of_sentence?
+    node = Node.parse_from(string)
+    while node.next
+      if node.end_of_sentence?
         finalize!
         break
       end
-      if chunkable?(@node)
-        update(@node)
+      if chunkable?(node)
+        update(node)
       else
-        concat(@node)
+        concat(node)
       end
     end
     variable_match
@@ -230,10 +230,10 @@ class GA_ILWD
       else
         node.pos
       end
-    @infinite = @surface + @node.infinite
-    @surface << @node.surface
-    @conj_type = @node.conj_type
-    @conj_form = @node.conj_form
+    @infinite = @surface + node.infinite
+    @surface << node.surface
+    @conj_type = node.conj_type
+    @conj_form = node.conj_form
   end
 
   def update(node)
@@ -253,12 +253,12 @@ class GA_ILWD
         prev_form: nil
       } unless node.pos == :functional
     end
-    @surface = @node.surface
-    @infinite = @node.infinite
+    @surface = node.surface
+    @infinite = node.infinite
     @current_pos = node.pos
-    @conj_type = @node.conj_type
+    @conj_type = node.conj_type
     @prev_form = @conj_form
-    @conj_form = @node.conj_form
+    @conj_form = node.conj_form
   end
 
   def finalize!
