@@ -33,12 +33,13 @@ class GA_ILWD
         concat(node)
       end
     end
+    variable_match
     broad_match
     exact_match
-    # 順序を含めて100％合致の内容語列がなければ新規内容語列
-    # if @last_response_id
-    #   応答文生成S->Uルールに保存
-    # end
+    learn_from_user
+    if @last_response_id
+      learn_from_user
+    end
     # 65％以上合致の内容語列が
     # - あればGA-IL応答出力
     # - なければEliza
@@ -46,10 +47,40 @@ class GA_ILWD
   end
 
   private
+  def learn_from_user
+    learn(@last_response_id, @exact_content_id)
+  end
+
+  def learn_from_self
+    learn(@exact_content_id, @this_response_id)
+  end
+
+  def learn(request_id, response_id)
+    # @tuple_space.write([:learn, request_id, response_id])
+  end
+
+  def variable_match
+  end
+
+  def retrieve_variable_responses(content)
+    single_pattern =
+      ContentPattern.where(
+        count: 1,
+        word: content[:word],
+        pos: content[:pos],
+        type: content[:conj_type]).first
+    return [] if single_pattern.nil?
+    ContentRule.where(request_id: single_pattern.pattern_id).all.map{|rule|
+      ContentPattern.where(pattern_id: rule.response_id).first
+    }.select{|pattern|
+      pattern.count == 1
+    }
+  end
+
   def broad_match
     content_patterns = []
     @contents.each do |content|
-      content_patterns <<
+      content_patterns.concat
         ContentPattern.where(
           count: range_of_count,
           word: content[:word],
@@ -155,9 +186,13 @@ class GA_ILWD
           prev_form: functional[:prev_form]).save!
       end
     end
-    if FunctionalRule.where(
-      content_id: @exact_content_id,
-      functional_id: functional_id).first.nil?
+    if functional_rule =
+      FunctionalRule.where(
+        content_id: @exact_content_id,
+        functional_id: functional_id).first
+      functional_rule.frequency += 1
+      functional_rule.save!
+    else
       FunctionalRule.new(
         content_id: @exact_content_id,
         functional_id: functional_id,
@@ -165,20 +200,10 @@ class GA_ILWD
     end
   end
 
-  def single_patterns(content)
-    ContentPattern.where(
-      order: 1,
-      count: 1,
-      word: content[:word],
-      pos: content[:pos],
-      type: content[:conj_type]).all
-  end
-
   def initialize_state!
     @surface = ''
     @infinite = ''
-    @last_pos = nil
-    @curr_pos = nil
+    @current_pos = nil
     @contents = []
     @functionals = []
   end
@@ -236,7 +261,7 @@ class GA_ILWD
     else
       @contents << {
         word: @infinite,
-        pos: @last_pos,
+        pos: @current_pos,
         conj_type: node.prev.conj_type
       }
       @functionals << {
