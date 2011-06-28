@@ -179,9 +179,6 @@ class GA_ILWD
     @infinite = ''
     @last_pos = nil
     @curr_pos = nil
-    @prev_form = nil
-    @conj_type = nil
-    @conj_form = nil
     @contents = []
     @functionals = []
   end
@@ -206,21 +203,19 @@ class GA_ILWD
       end
     @infinite = @surface + node.infinite
     @surface << node.surface
-    @conj_type = node.conj_type
-    @conj_form = node.conj_form
   end
 
   def update(node)
     if functional_state?
       @functionals << {
         word: @surface,
-        prev_form: @prev_form
+        prev_form: node.prev.conj_form
       }
     else
       @contents << {
         word: @infinite,
         pos: @current_pos,
-        conj_type: @conj_type
+        conj_type: node.prev.conj_type
       }
       @functionals << {
         word: '',
@@ -230,22 +225,19 @@ class GA_ILWD
     @surface = node.surface
     @infinite = node.infinite
     @current_pos = node.pos
-    @conj_type = node.conj_type
-    @prev_form = @conj_form
-    @conj_form = node.conj_form
   end
 
   def finalize!
     if functional_state?
       @functionals << {
         word: @surface,
-        prev_form: @prev_form
+        prev_form: node.prev.conj_form
       }
     else
       @contents << {
         word: @infinite,
         pos: @last_pos,
-        conj_type: @conj_type
+        conj_type: node.prev.conj_type
       }
       @functionals << {
         word: '',
