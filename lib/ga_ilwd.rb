@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+$:.unshift File.dirname(__FILE__)
 
-require 'MeCab'
+require 'node'
 
 class GA_ILWD
   class Eliza
@@ -11,7 +12,6 @@ class GA_ILWD
   end
 
   def initialize
-    @tagger = MeCab::Tagger.new
     @eliza = Eliza.new
     # TODO
     # @tuple_space = DRbObject.new_with_uri()
@@ -21,13 +21,13 @@ class GA_ILWD
 
   def respond(string)
     initialize_state!
-    parse_to_node(string)
-    while next_node?
-      if end_of_sentence?
+    @node = Node.parse_from(string)
+    while @node.next
+      if @node.end_of_sentence?
         finalize!
         break
       end
-      set_new_pos
+      @new_pos = @node.pos
       if chunkable?
         update
       else
@@ -187,53 +187,6 @@ class GA_ILWD
     @functionals = []
   end
 
-  def parse_to_node(string)
-    @node = @tagger.parseToNode(string)
-  end
-
-  def next_node?
-    @node = @node.next
-  end
-
-  def end_of_sentence?
-    @node.feature[/^BOS\/EOS/]
-  end
-
-  def surface
-    @node.surface.force_encoding('utf-8')
-  end
-
-  def feature
-    @node.feature.force_encoding('utf-8')
-  end
-
-  def conj_type
-    case feature.split(',')[4]
-    when '*'
-      nil
-    else
-      feature.split(',')[4]
-    end
-  end
-
-  def conj_form
-    case feature.split(',')[5]
-    when '*'
-      nil
-    else
-      feature.split(',')[5]
-    end
-  end
-
-  def infinite
-    case feature.split(',')[6]
-    when '*'
-      surface
-    else
-      feature.split(',')[6]
-    end
-  end
-
   def functional_state?
     @functionals.size == @contents.size
   end
@@ -252,10 +205,10 @@ class GA_ILWD
       else
         @new_pos
       end
-    @infinite = @surface + infinite
-    @surface << surface
-    @conj_type = conj_type
-    @conj_form = conj_form
+    @infinite = @surface + @node.infinite
+    @surface << @node.surface
+    @conj_type = @node.conj_type
+    @conj_form = @node.conj_form
   end
 
   def update
@@ -275,12 +228,12 @@ class GA_ILWD
         prev_form: nil
       } unless @new_pos == :functional
     end
-    @surface = surface
-    @infinite = infinite
+    @surface = @node.surface
+    @infinite = @node.infinite
     @current_pos = @new_pos
-    @conj_type = conj_type
+    @conj_type = @node.conj_type
     @prev_form = @conj_form
-    @conj_form = conj_form
+    @conj_form = @node.conj_form
   end
 
   def finalize!
@@ -330,52 +283,6 @@ class GA_ILWD
         end
       end
     end
-  end
-
-  def set_new_pos
-    @new_pos =
-      case feature[/^([^,]+)/]
-      when '名詞'
-        if feature[/非自立|特殊,助動詞語幹|接続詞的/]
-          :functional
-        else
-          if feature[/接尾/]
-            :suffix_noun
-          else
-            :noun
-          end
-        end
-      when '接頭詞'
-        :prefix
-      when '動詞'
-        if feature[/非自立/]
-          :functional
-        else
-          if feature[/接尾/]
-            :suffix_verb
-          else
-            :verb
-          end
-        end
-      when '形容詞'
-        if feature[/非自立/]
-          :functional
-        else
-          if feature[/接尾/]
-            :suffix_adjv
-          else
-            :adjv
-          end
-        end
-      when '連体詞'
-        :adnominal
-      when '感動詞'
-        :interjection
-      when '副詞', '接続詞', '助詞', '助動詞', '記号', 'フィラー', 'その他'
-        :functional
-      else
-        raise 'こんな品詞もありましたよ！：' + feature
-      end
   end
 
   def eliza_respond(string)
