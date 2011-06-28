@@ -156,9 +156,13 @@ class GA_ILWD
           prev_form: functional[:prev_form]).save!
       end
     end
-    if FunctionalRule.where(
-      content_id: @exact_content_id,
-      functional_id: functional_id).first.nil?
+    if functional_rule =
+      FunctionalRule.where(
+        content_id: @exact_content_id,
+        functional_id: functional_id).first
+      functional_rule.frequency += 1
+      functional_rule.save!
+    else
       FunctionalRule.new(
         content_id: @exact_content_id,
         functional_id: functional_id,
