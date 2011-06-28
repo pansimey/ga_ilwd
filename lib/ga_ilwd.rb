@@ -166,20 +166,11 @@ class GA_ILWD
     end
   end
 
-  def single_patterns(content)
-    ContentPattern.where(
-      order: 1,
-      count: 1,
-      word: content[:word],
-      pos: content[:pos],
-      type: content[:conj_type]).all
-  end
-
   def initialize_state!
     @surface = ''
     @infinite = ''
-    @last_pos = nil
-    @curr_pos = nil
+    @current_pos = nil
+    @new_pos = nil
     @prev_form = nil
     @conj_type = nil
     @conj_form = nil
@@ -292,7 +283,7 @@ class GA_ILWD
     else
       @contents << {
         word: @infinite,
-        pos: @last_pos,
+        pos: @current_pos,
         conj_type: @conj_type
       }
       @functionals << {
