@@ -28,7 +28,7 @@ class GA_ILWD
       else
         concat(node)
       end
-      node.next
+      node = node.next
     end
     finalize_state!
     variable_match
