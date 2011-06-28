@@ -8,7 +8,7 @@ class Node
   attr_reader :prev
 
   def initialize(node, prev=nil)
-    @node = node
+    @node = node.next
     @prev = prev
   end
 

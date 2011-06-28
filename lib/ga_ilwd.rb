@@ -22,17 +22,15 @@ class GA_ILWD
   def respond(string)
     initialize_state!
     node = Node.parse_from(string)
-    while node.next
-      if node.end_of_sentence?
-        finalize!
-        break
-      end
+    until node.end_of_sentence?
       if chunkable?(node)
         update(node)
       else
         concat(node)
       end
+      node.next
     end
+    finalize!
     variable_match
     broad_match
     exact_match
