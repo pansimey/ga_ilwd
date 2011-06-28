@@ -63,7 +63,7 @@ class GA_ILWD
         ContentPattern.where(
           order: index + 1,
           count: @contents.size,
-          word: content[:infinite],
+          word: content[:word],
           pos: content[:pos],
           conj_type: content[:conj_type]).all
       new_content_ids = content_patterns.map{|pattern| pattern.pattern_id}
@@ -87,7 +87,7 @@ class GA_ILWD
           pattern_id: @exact_content_id,
           order: index + 1,
           count: @contents.size,
-          word: content[:infinite],
+          word: content[:word],
           pos: content[:pos],
           conj_type: content[:conj_type]).save!
       end
@@ -101,7 +101,7 @@ class GA_ILWD
         FunctionalPattern.where(
           order: index + 1,
           count: @contents.size,
-          word: functional[:surface],
+          word: functional[:word],
           prev_form: functional[:prev_form]).all
       new_functional_ids = functional_patterns.map{|pattern| pattern.pattern_id}
       if content_ids.nil?
@@ -124,7 +124,7 @@ class GA_ILWD
           pattern_id: functional_id,
           order: index + 1,
           count: @functionals.size,
-          word: functional[:surface],
+          word: functional[:word],
           prev_form: functional[:prev_form]).save!
       end
     end
@@ -142,7 +142,7 @@ class GA_ILWD
     ContentPattern.where(
       order: 1,
       count: 1,
-      word: content[:infinite],
+      word: content[:word],
       pos: content[:pos],
       type: content[:conj_type]).all
   end
@@ -233,17 +233,17 @@ class GA_ILWD
   def update
     if functional_state?
       @functionals << {
-        surface: @surface,
+        word: @surface,
         prev_form: @prev_form
       }
     else
       @contents << {
-        infinite: @infinite,
+        word: @infinite,
         pos: @current_pos,
         conj_type: @conj_type
       }
       @functionals << {
-        surface: '',
+        word: '',
         prev_form: nil
       } unless @new_pos == :functional
     end
@@ -257,14 +257,14 @@ class GA_ILWD
 
   def finalize!
     if functional_state?
-      @functionals << { surface: @surface, prev_form: @prev_form }
+      @functionals << { word: @surface, prev_form: @prev_form }
     else
       @contents << {
-        infinite: @infinite,
+        word: @infinite,
         pos: @last_pos,
         conj_type: @conj_type
       }
-      @functionals << { surface: '', prev_form: nil }
+      @functionals << { word: '', prev_form: nil }
     end
   end
 
