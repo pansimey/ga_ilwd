@@ -5,12 +5,15 @@ require 'MeCab'
 class Node
   @@tagger = MeCab::Tagger.new
 
-  def initialize(node)
+  attr_reader :prev
+
+  def initialize(node, prev=nil)
     @node = node
+    @prev = prev
   end
 
   def next
-    Node.new(@node.next)
+    Node.new(@node.next, self)
   end
 
   def end_of_sentence?
