@@ -232,22 +232,10 @@ class GA_ILWD
 
   def update
     if functional_state?
-      new_functional = {}
-      new_functional[:surface] = @surface
-      new_functional[:prev_form] = @prev_form
-      @functionals << new_functional
+      @functionals << {surface:@surface, prev_form:@prev_form}
     else
-      new_content = {}
-      new_content[:infinite] = @infinite
-      new_content[:pos] = @current_pos
-      new_content[:conj_type] = @conj_type
-      @contents << new_content
-      unless @new_pos == :functional
-        new_functional = {}
-        new_functional[:surface] = ''
-        new_functional[:prev_form] = nil
-        @functionals << new_functional
-      end
+      @contents << {infinite:@infinite, pos:@current_pos, conj_type:@conj_type}
+      @functionals << {surface:'', prev_form:nil} unless @new_pos == :functional
     end
     @surface = surface
     @infinite = infinite
@@ -259,20 +247,10 @@ class GA_ILWD
 
   def finalize!
     if functional_state?
-      new_functional = {}
-      new_functional[:surface] = @surface
-      new_functional[:prev_form] = @prev_form
-      @functionals << new_functional
+      @functionals << {surface:@surface, prev_form:@prev_form}
     else
-      new_content = {}
-      new_content[:infinite] = @infinite
-      new_content[:pos] = @last_pos
-      new_content[:conj_type] = @conj_type
-      @contents << new_content
-      new_functional = {}
-      new_functional[:surface] = ''
-      new_functional[:prev_form] = nil
-      @functionals << new_functional
+      @contents << {infinite:@infinite, pos:@last_pos, conj_type:@conj_type}
+      @functionals << {surface:'', prev_form:nil}
     end
   end
 
