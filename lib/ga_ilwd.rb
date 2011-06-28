@@ -232,10 +232,20 @@ class GA_ILWD
 
   def update
     if functional_state?
-      @functionals << {surface:@surface, prev_form:@prev_form}
+      @functionals << {
+        surface: @surface,
+        prev_form: @prev_form
+      }
     else
-      @contents << {infinite:@infinite, pos:@current_pos, conj_type:@conj_type}
-      @functionals << {surface:'', prev_form:nil} unless @new_pos == :functional
+      @contents << {
+        infinite: @infinite,
+        pos: @current_pos,
+        conj_type: @conj_type
+      }
+      @functionals << {
+        surface: '',
+        prev_form: nil
+      } unless @new_pos == :functional
     end
     @surface = surface
     @infinite = infinite
@@ -247,10 +257,14 @@ class GA_ILWD
 
   def finalize!
     if functional_state?
-      @functionals << {surface:@surface, prev_form:@prev_form}
+      @functionals << { surface: @surface, prev_form: @prev_form }
     else
-      @contents << {infinite:@infinite, pos:@last_pos, conj_type:@conj_type}
-      @functionals << {surface:'', prev_form:nil}
+      @contents << {
+        infinite: @infinite,
+        pos: @last_pos,
+        conj_type: @conj_type
+      }
+      @functionals << { surface: '', prev_form: nil }
     end
   end
 
