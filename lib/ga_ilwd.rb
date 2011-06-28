@@ -245,9 +245,9 @@ class GA_ILWD
         prev_form: nil
       } unless node.pos == :functional
     end
-    @surface = node.surface
-    @infinite = node.infinite
     @current_pos = node.pos
+    @infinite = node.infinite
+    @surface = node.surface
   end
 
   def finalize_state!
