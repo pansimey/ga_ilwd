@@ -27,11 +27,10 @@ class GA_ILWD
         finalize!
         break
       end
-      @new_pos = @node.pos
-      if chunkable?
-        update
+      if chunkable?(@node)
+        update(@node)
       else
-        concat
+        concat(@node)
       end
     end
     broad_match
@@ -191,9 +190,9 @@ class GA_ILWD
     @functionals.size == @contents.size
   end
 
-  def concat
+  def concat(node)
     @current_pos =
-      case @new_pos
+      case node.pos
       when :suffix_noun
         :noun
       when :suffix_verb
@@ -203,7 +202,7 @@ class GA_ILWD
       when :prefix
         :noun
       else
-        @new_pos
+        node.pos
       end
     @infinite = @surface + @node.infinite
     @surface << @node.surface
@@ -211,7 +210,7 @@ class GA_ILWD
     @conj_form = @node.conj_form
   end
 
-  def update
+  def update(node)
     if functional_state?
       @functionals << {
         word: @surface,
@@ -226,11 +225,11 @@ class GA_ILWD
       @functionals << {
         word: '',
         prev_form: nil
-      } unless @new_pos == :functional
+      } unless node.pos == :functional
     end
     @surface = @node.surface
     @infinite = @node.infinite
-    @current_pos = @new_pos
+    @current_pos = node.pos
     @conj_type = @node.conj_type
     @prev_form = @conj_form
     @conj_form = @node.conj_form
@@ -255,8 +254,8 @@ class GA_ILWD
     end
   end
 
-  def chunkable?
-    if @new_pos == :functional
+  def chunkable?(node)
+    if node.pos == :functional
       if functional_state?
         false
       else
@@ -264,18 +263,18 @@ class GA_ILWD
       end
     else
       if functional_state?
-        case @new_pos
+        case node.pos
         when :suffix_noun, :suffix_verb, :suffix_adjv
           false
         else
           true
         end
-      elsif @current_pos == :noun && @new_pos == :noun
+      elsif @current_pos == :noun && node.pos == :noun
         false
       elsif @current_pos == :prefix
         false
       else
-        case @new_pos
+        case node.pos
         when :suffix_noun, :suffix_verb, :suffix_adjv
           false
         else
