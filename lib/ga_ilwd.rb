@@ -23,14 +23,14 @@ class GA_ILWD
     initialize_state!
     node = Node.parse_from(string)
     until node.end_of_sentence?
-      if node.to_be_combined?
+      if to_be_combined?(node)
         concat(node)
       else
         update(node)
       end
       node = node.next
     end
-    finalize_state!
+    finalize_state!(node)
     variable_match
     broad_match
     exact_match
@@ -250,7 +250,7 @@ class GA_ILWD
     @surface = node.surface
   end
 
-  def finalize_state!
+  def finalize_state!(node)
     if functional_state?
       @functionals << {
         word: @surface,
@@ -269,11 +269,11 @@ class GA_ILWD
     end
   end
 
-  def to_be_combined?
-    sequence_of_functionals? ||
-      sequence_of_nouns? ||
-      prefix_and_content? ||
-      suffix_following?
+  def to_be_combined?(node)
+    sequence_of_functionals?(node) ||
+      sequence_of_nouns?(node) ||
+      prefix_and_content?(node) ||
+      suffix_following?(node)
   end
 
   def sequence_of_functionals?(node)
