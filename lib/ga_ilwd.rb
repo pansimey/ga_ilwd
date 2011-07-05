@@ -23,10 +23,10 @@ class GA_ILWD
     initialize_state!
     node = Node.parse_from(string)
     until node.end_of_sentence?
-      if chunkable?(node)
-        update(node)
-      else
+      if node.to_be_combined?
         concat(node)
+      else
+        update(node)
       end
       node = node.next
     end
@@ -269,34 +269,27 @@ class GA_ILWD
     end
   end
 
-  def chunkable?(node)
-    if node.pos == :functional
-      if functional_state?
-        false
-      else
-        true
-      end
-    else
-      if functional_state?
-        case node.pos
-        when :suffix_noun, :suffix_verb, :suffix_adjv
-          false
-        else
-          true
-        end
-      elsif @current_pos == :noun && node.pos == :noun
-        false
-      elsif @current_pos == :prefix
-        false
-      else
-        case node.pos
-        when :suffix_noun, :suffix_verb, :suffix_adjv
-          false
-        else
-          true
-        end
-      end
-    end
+  def to_be_combined?
+    sequence_of_functionals? ||
+      sequence_of_nouns? ||
+      prefix_and_content? ||
+      suffix_following?
+  end
+
+  def sequence_of_functionals?(node)
+    functional_state? && node.pos == :functional
+  end
+
+  def sequence_of_nouns?(node)
+    node.prev.pos == :noun && node.pos == :noun
+  end
+
+  def prefix_and_content?(node)
+    node.prev.pos == :prefix && node.pos != :functional
+  end
+
+  def suffix_following?(node)
+    [:suffix_noun, :suffix_verb, :suffix_adjv].include?(node.pos)
   end
 
   def eliza_respond(string)
