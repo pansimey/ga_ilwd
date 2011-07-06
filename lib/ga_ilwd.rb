@@ -30,7 +30,7 @@ class GA_ILWD
       end
       node = node.next
     end
-    finalize_state!(node)
+    finalize_state!
     variable_match
     broad_match
     exact_match
@@ -215,10 +215,10 @@ class GA_ILWD
 
   def update(node)
     if node.prev.functional_state?
-      update_functional(node)
+      update_functional
     else
       insert_blank_functional if @functionals.empty?
-      update_content(node)
+      update_content
       insert_blank_functional unless node.functional_state?
     end
     @current_pos = node.pos
@@ -228,11 +228,11 @@ class GA_ILWD
     @prev_form = node.prev.conj_form
   end
 
-  def update_content(node)
+  def update_content
     @contents << { word: @infinite, pos: @current_pos, conj_type: @conj_type }
   end
 
-  def update_functional(node)
+  def update_functional
     @functionals << { word: @surface, prev_form: @prev_form }
   end
 
@@ -240,11 +240,11 @@ class GA_ILWD
     @functionals << { word: '', prev_form: nil }
   end
 
-  def finalize_state!(node)
+  def finalize_state!
     if node.prev.functional_state?
-      update_functional(node)
+      update_functional
     else
-      update_content(node)
+      update_content
       insert_blank_functional
     end
   end
