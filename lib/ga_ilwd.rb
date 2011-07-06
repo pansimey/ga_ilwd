@@ -23,7 +23,7 @@ class GA_ILWD
     initialize_state!
     node = Node.parse_from(string)
     until node.end_of_sentence?
-      if to_be_combined?(node)
+      if node.to_be_combined?
         concat(node)
       else
         update(node)
@@ -206,90 +206,47 @@ class GA_ILWD
     @functionals = []
   end
 
-  def functional_state?
-    @functionals.size == @contents.size
-  end
-
   def concat(node)
-    @current_pos =
-      case node.pos
-      when :suffix_noun
-        :noun
-      when :suffix_verb
-        :verb
-      when :suffix_adjv
-        :adjv
-      when :prefix
-        :noun
-      else
-        node.pos
-      end
+    @current_pos = node.pos_to_concat
     @infinite = @surface + node.infinite
     @surface << node.surface
+    @conj_type = node.conj_type
   end
 
   def update(node)
-    if functional_state?
-      @functionals << {
-        word: @surface,
-        prev_form: node.prev.conj_form
-      }
+    if node.prev.functional_state?
+      update_functional(node)
     else
-      @contents << {
-        word: @infinite,
-        pos: @current_pos,
-        conj_type: node.prev.conj_type
-      }
-      @functionals << {
-        word: '',
-        prev_form: nil
-      } unless node.pos == :functional
+      insert_blank_functional if @functionals.empty?
+      update_content(node)
+      insert_blank_functional unless node.functional_state?
     end
     @current_pos = node.pos
     @infinite = node.infinite
     @surface = node.surface
+    @conj_type = node.conj_type
+    @prev_form = node.prev.conj_form
+  end
+
+  def update_content(node)
+    @contents << { word: @infinite, pos: @current_pos, conj_type: @conj_type }
+  end
+
+  def update_functional(node)
+    @functionals << { word: @surface, prev_form: @prev_form }
+  end
+
+  def insert_blank_functional
+    @functionals << { word: '', prev_form: nil }
   end
 
   def finalize_state!(node)
-    if functional_state?
-      @functionals << {
-        word: @surface,
-        prev_form: node.prev.conj_form
-      }
+    if node.prev.functional_state?
+      update_functional(node)
     else
-      @contents << {
-        word: @infinite,
-        pos: @current_pos,
-        conj_type: node.prev.conj_type
-      }
-      @functionals << {
-        word: '',
-        prev_form: nil
-      }
+      update_content(node)
+      insert_blank_functional
     end
-  end
-
-  def to_be_combined?(node)
-    sequence_of_functionals?(node) ||
-      sequence_of_nouns?(node) ||
-      prefix_and_content?(node) ||
-      suffix_following?(node)
-  end
-
-  def sequence_of_functionals?(node)
-    functional_state? && node.pos == :functional
-  end
-
-  def sequence_of_nouns?(node)
-    node.prev.pos == :noun && node.pos == :noun
-  end
-
-  def prefix_and_content?(node)
-    node.prev.pos == :prefix && node.pos != :functional
-  end
-
-  def suffix_following?(node)
-    [:suffix_noun, :suffix_verb, :suffix_adjv].include?(node.pos)
   end
 
   def eliza_respond(string)

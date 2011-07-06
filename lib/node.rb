@@ -7,13 +7,54 @@ class Node
 
   attr_reader :prev
 
-  def initialize(node, prev=nil)
+  def initialize(node, prev = nil)
     @node = node.next
     @prev = prev
   end
 
+  def functional_state?
+    pos_functional? || suffix_to_functional?
+  end
+
+  def to_be_combined?
+    sequence_of_functionals? || sequence_of_nouns? ||
+      prefix_and_content? || suffix_following?
+  end
+
+  private :pos_functional?, :suffix_to_functional?, :pos_suffix?,
+    :suffix_following?, :sequence_of_functionals?,
+    :sequence_of_nouns?, :prefix_and_content?
+
+  def pos_functional?
+    pos == :functional
+  end
+
+  def suffix_to_functional?
+    @prev && @prev.functional_state? && pos_suffix?
+  end
+
+  def pos_suffix?
+    [:suffix_noun, :suffix_verb, :suffix_adjv].include?(pos)
+  end
+
+  def suffix_following?
+    @prev && pos_suffix?
+  end
+
+  def sequence_of_functionals?
+    functional_state? && @prev.functional_state?
+  end
+
+  def sequence_of_nouns?
+    @prev && @prev.pos == :noun && pos == :noun
+  end
+
+  def prefix_and_content?
+    @prev && @prev.pos == :prefix && pos != :functional
+  end
+
   def next
-    Node.new(@node.next, self)
+    Node.new(@node.next, self, set_next_state)
   end
 
   def end_of_sentence?
@@ -97,6 +138,21 @@ class Node
       :functional
     else
       raise 'こんな品詞もありましたよ！：' + feature
+    end
+  end
+
+  def pos_to_concat
+    case pos
+    when :suffix_noun
+      :noun
+    when :suffix_verb
+      :verb
+    when :suffix_adjv
+      :adjv
+    when :prefix
+      :noun
+    else
+      pos
     end
   end
 
