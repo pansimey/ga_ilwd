@@ -13,6 +13,6 @@ class Utterance
   end
 
   def succ
-    self.class.new(@@eliza.response(@string))
+    self.class.parse(@@eliza.response(@string))
   end
 end
